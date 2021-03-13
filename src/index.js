@@ -1,3 +1,5 @@
+import EventEmitter from 'events';
+
 import { vidEvents } from "./vidEvents";
 
 class ValidationException extends Error {
@@ -7,7 +9,7 @@ class ValidationException extends Error {
         this.name = "ValidationError";
     }
 }
-class Vidmon {
+class Vidmon extends EventEmitter{
     static LOG_LEVELS = {
         DISABLED: 0,
         ERROR: 1,
@@ -23,6 +25,13 @@ class Vidmon {
         MULTI_WAITING: "Multiple waitings in a row",
         PLAY_AFTER_WAITING: "Play after waiting",
     };
+
+    static EVENTS = {
+        LONG_JOIN_TIME: "long-join-time",
+        VISUAL_STALL: "visual-stall",
+        LONG_WAITING_TIME: "long-waiting-time",
+        MULTI_WAITING_IN_ROW: "multi-waiting-in-row"
+    }
 
     _logLevel = 1;
     _vidEl = null;
@@ -44,6 +53,7 @@ class Vidmon {
      * @param {Object|null} reportExtra any extra data to include on the report
      */
     constructor(videoElement, reportExtra = {}) {
+        super({});
         this._vidEl = videoElement;
         this._extra = reportExtra;
     }
@@ -55,12 +65,19 @@ class Vidmon {
         if (level < 0 || level > 5) {
             throw new ValidationException(
                 "Log level should be one of " +
-                    JSON.stringify(Object.keys(Vidmon.LOG_LEVELS))
+                    JSON.stringify(Vidmon.LOG_LEVELS)
             );
         }
         this._logLevel = level;
     }
 
+    get playerEventsLogs () {
+        return this._eventsLogs;
+    }
+
+    /**
+     * start monitor
+     */
     start = () => {
         if (!this._vidEl) {
             throw new ValidationException("Video elements is not set yet");
@@ -76,13 +93,15 @@ class Vidmon {
         this._attachListeners();
     };
 
+    /**
+     * stop monitor
+     */
     stop = () => {
         this._log(Vidmon.LOG_LEVELS.INFO, "Stopped");
         this._removeListeners();
         this._watchers.forEach((watcher) => {
             clearTimeout(watcher);
         });
-        console.log(this._logEvent);
     };
 
     _handleEvents = (event) => {
@@ -148,6 +167,7 @@ class Vidmon {
                     Vidmon.WATCHERS.JOIN_TIME,
                     this._jointimeThershold,
                     () => {
+                        this.emit(Vidmon.EVENTS.LONG_JOIN_TIME)
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
                             "Join time toke more than",
@@ -165,6 +185,7 @@ class Vidmon {
                     Vidmon.WATCHERS.REAL_STALL,
                     this._timeupdateThreshold,
                     () => {
+                        this.emit(Vidmon.EVENTS.VISUAL_STALL)
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
                             "The player visually stalled for more than",
@@ -185,6 +206,7 @@ class Vidmon {
                     Vidmon.WATCHERS.PLAY_AFTER_WAITING,
                     this._playAfterWaitingThershold,
                     () => {
+                        this.emit(Vidmon.EVENTS.LONG_WAITING_TIME)
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
                             "The player still waiting for more than",
@@ -201,6 +223,7 @@ class Vidmon {
                             Date.now - this._waitings[0] >
                             this._waitingTSDiffThershold
                         )
+                            this.emit(Vidmon.EVENTS.MULTI_WAITING_IN_ROW)
                             this._log(
                                 Vidmon.LOG_LEVELS.WARNING,
                                 "The player waitted for more than 3 times in less than ",
