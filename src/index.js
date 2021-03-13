@@ -1,4 +1,4 @@
-import EventEmitter from 'events';
+import EventEmitter from "events";
 
 import { vidEvents } from "./vidEvents";
 
@@ -9,7 +9,7 @@ class ValidationException extends Error {
         this.name = "ValidationError";
     }
 }
-class Vidmon extends EventEmitter{
+class Vidmon extends EventEmitter {
     static LOG_LEVELS = {
         DISABLED: 0,
         ERROR: 1,
@@ -30,32 +30,50 @@ class Vidmon extends EventEmitter{
         LONG_JOIN_TIME: "long-join-time",
         VISUAL_STALL: "visual-stall",
         LONG_WAITING_TIME: "long-waiting-time",
-        MULTI_WAITING_IN_ROW: "multi-waiting-in-row"
-    }
+        MULTI_WAITING_IN_ROW: "multi-waiting-in-row",
+    };
 
     _logLevel = 1;
     _vidEl = null;
-    _extra = null;
     _eventsLogs = [];
     _lastEvent = {};
     _startTime = null;
-    _timeupdateThreshold = 10 * 1000; // 10sec
-    _jointimeThershold = 30 * 1000; // 30sec
-    _playAfterWaitingThershold = 5 * 1000; // 30sec
-    _waitingTSDiffThershold = 60 * 1000; // 30sec
     _lastTimeupdateTS = 0;
     _watchers = {};
     _waitings = [];
+    _options = {
+        // time thershold between timeupdate events, if we didn't receive timeupdate event before
+        // event of type VISUAL_STALL wil be fired
+        timeupdateThreshold: 10 * 1000, // default 10sec
 
+        // time thershold between first play event and first timeupdate event
+        // if the join time exceded this limit
+        // event of type LONG_JOIN_TIME will be fired
+        jointimeThershold: 30 * 1000, // default 30sec
+
+        // time thershold between waiting event and next timeupdate event
+        // if the join time exceded this limit
+        // event of type LONG_WAITING_TIME will be fired
+        playAfterWaitingThershold: 5 * 1000, // default 30sec
+
+        // in this time interval if we get more than 3 waiting events in a row
+        // event of type MULTI_WAITING_IN_ROW will be fired
+        waitingTSDiffThershold: 60 * 1000, // default 30sec
+    };
+
+    
     /**
      * Create Vidmon instance
      * @param {HTMLVideoElement} videoElement video element to monitor
-     * @param {Object|null} reportExtra any extra data to include on the report
+     * @param {typeof this._options} options timeout thersholds config
      */
-    constructor(videoElement, reportExtra = {}) {
+    constructor(videoElement, options = {}) {
         super({});
         this._vidEl = videoElement;
-        this._extra = reportExtra;
+        this._options = {
+            ...this._options,
+            ...options,
+        };
     }
 
     /**
@@ -71,7 +89,7 @@ class Vidmon extends EventEmitter{
         this._logLevel = level;
     }
 
-    get playerEventsLogs () {
+    get playerEventsLogs() {
         return this._eventsLogs;
     }
 
@@ -165,13 +183,13 @@ class Vidmon extends EventEmitter{
             case "play":
                 this._startWatcher(
                     Vidmon.WATCHERS.JOIN_TIME,
-                    this._jointimeThershold,
+                    this._options.jointimeThershold,
                     () => {
-                        this.emit(Vidmon.EVENTS.LONG_JOIN_TIME)
+                        this.emit(Vidmon.EVENTS.LONG_JOIN_TIME);
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
                             "Join time toke more than",
-                            this._jointimeThershold / 1000,
+                            this._options.jointimeThershold / 1000,
                             "seconds"
                         );
                     }
@@ -183,13 +201,13 @@ class Vidmon extends EventEmitter{
                 this._stopWatcher(Vidmon.WATCHERS.PLAY_AFTER_WAITING);
                 this._startWatcher(
                     Vidmon.WATCHERS.REAL_STALL,
-                    this._timeupdateThreshold,
+                    this._options.timeupdateThreshold,
                     () => {
-                        this.emit(Vidmon.EVENTS.VISUAL_STALL)
+                        this.emit(Vidmon.EVENTS.VISUAL_STALL);
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
                             "The player visually stalled for more than",
-                            this._timeupdateThreshold / 1000,
+                            this._options.timeupdateThreshold / 1000,
                             "seconds"
                         );
                     }
@@ -204,13 +222,13 @@ class Vidmon extends EventEmitter{
                 this._stopWatcher(Vidmon.WATCHERS.PLAY_AFTER_WAITING);
                 this._startWatcher(
                     Vidmon.WATCHERS.PLAY_AFTER_WAITING,
-                    this._playAfterWaitingThershold,
+                    this._options.playAfterWaitingThershold,
                     () => {
-                        this.emit(Vidmon.EVENTS.LONG_WAITING_TIME)
+                        this.emit(Vidmon.EVENTS.LONG_WAITING_TIME);
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
                             "The player still waiting for more than",
-                            this._playAfterWaitingThershold / 1000,
+                            this._options.playAfterWaitingThershold / 1000,
                             "seconds"
                         );
                     }
@@ -221,15 +239,15 @@ class Vidmon extends EventEmitter{
                         this._waitings.shift();
                         if (
                             Date.now - this._waitings[0] >
-                            this._waitingTSDiffThershold
+                            this._options.waitingTSDiffThershold
                         )
-                            this.emit(Vidmon.EVENTS.MULTI_WAITING_IN_ROW)
-                            this._log(
-                                Vidmon.LOG_LEVELS.WARNING,
-                                "The player waitted for more than 3 times in less than ",
-                                this._waitingTSDiffThershold / 1000,
-                                "seconds"
-                            );
+                            this.emit(Vidmon.EVENTS.MULTI_WAITING_IN_ROW);
+                        this._log(
+                            Vidmon.LOG_LEVELS.WARNING,
+                            "The player waitted for more than 3 times in less than ",
+                            this._options.waitingTSDiffThershold / 1000,
+                            "seconds"
+                        );
                     }
                 });
         }
