@@ -68,9 +68,9 @@ umdProdConfig.plugins = [
 let configurations = [];
 if (process.env.SERVE) {
     const serveConfig = Object.assign({}, commonConfig);
-    serveConfig.input = 'render/index.js';
+    serveConfig.input = 'src/index.js';
     serveConfig.output = Object.assign({}, commonConfig.output, {
-        file: 'dist/render/vidmon.iife.js',
+        file: 'dist/vidmon.iife.js',
         format: 'iife'
     });
     serveConfig.plugins = [
