@@ -273,41 +273,32 @@ class Vidmon extends EventEmitter {
         }
     };
 
+
+     _getLogFunction = (level) => {
+        switch (level) {
+            case Vidmon.LOG_LEVELS.DEBUG:
+                return ["debug", "DEBUG: " ]
+            case Vidmon.LOG_LEVELS.ERROR:
+                return ["error", "ERROR: "]
+            case Vidmon.LOG_LEVELS.WARNING:
+                return ["warn", "WARNING: "]
+            case Vidmon.LOG_LEVELS.INFO:
+                return ["info",  "INFO: "]
+            case Vidmon.LOG_LEVELS.VERBOSE:
+                return ["info", "VERBOSE: "]
+        }
+
+     } 
+
     _log = (level, ...args) => {
         const TAG = "Vidmon: ";
         if (level == Vidmon.LOG_LEVELS.DISABLED) return;
-        switch (level) {
-            case Vidmon.LOG_LEVELS.DEBUG:
-                if (this._logLevel >= Vidmon.LOG_LEVELS.DEBUG)
-                    console.debug
-                        ? console.debug(TAG, ...args)
-                        : console.log(TAG, "DEBUG: ", ...args);
-                break;
-            case Vidmon.LOG_LEVELS.ERROR:
-                if (this._logLevel >= Vidmon.LOG_LEVELS.ERROR)
-                    console.error
-                        ? console.error(TAG, ...args)
-                        : console.log(TAG, "ERROR: ", ...args);
-                break;
-            case Vidmon.LOG_LEVELS.WARNING:
-                if (this._logLevel >= Vidmon.LOG_LEVELS.WARNING)
-                    console.warn
-                        ? console.warn(TAG, ...args)
-                        : console.log(TAG, "WARNING: ", ...args);
-                break;
-            case Vidmon.LOG_LEVELS.INFO:
-                if (this._logLevel >= Vidmon.LOG_LEVELS.INFO)
-                    console.info
-                        ? console.info(TAG, ...args)
-                        : console.log(TAG, "INFO: ", ...args);
-                break;
-            case Vidmon.LOG_LEVELS.VERBOSE:
-                if (this._logLevel >= Vidmon.LOG_LEVELS.VERBOSE)
-                    console.info
-                        ? console.info(TAG, ...args)
-                        : console.log(TAG, "VERBOSE: ", ...args);
-                break;
-        }
+        const [functionName, levelTag]  = this._getLogFunction(level)
+        if (this._logLevel >= level) {
+            console[functionName]
+            ? console[functionName](TAG, ...args)
+            : console.log(TAG, levelTag, ...args);
+        }         
     };
 }
 
