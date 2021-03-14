@@ -1,12 +1,12 @@
-import EventEmitter from "events";
+import EventEmitter from 'events';
 
-import { vidEvents } from "./vidEvents";
+import { vidEvents } from './vidEvents';
 
 class ValidationException extends Error {
-    static TAG = "VIDMOM ERROR: ";
+    static TAG = 'VIDMOM ERROR: ';
     constructor(message) {
         super(`${ValidationException.TAG}: ${message}`);
-        this.name = "ValidationError";
+        this.name = 'ValidationError';
     }
 }
 class Vidmon extends EventEmitter {
@@ -20,17 +20,17 @@ class Vidmon extends EventEmitter {
     };
 
     static WATCHERS = {
-        JOIN_TIME: "Join Time",
-        REAL_STALL: "Visual Stalling",
-        MULTI_WAITING: "Multiple waitings in a row",
-        PLAY_AFTER_WAITING: "Play after waiting",
+        JOIN_TIME: 'Join Time',
+        REAL_STALL: 'Visual Stalling',
+        MULTI_WAITING: 'Multiple waitings in a row',
+        PLAY_AFTER_WAITING: 'Play after waiting',
     };
 
     static EVENTS = {
-        LONG_JOIN_TIME: "long-join-time",
-        VISUAL_STALL: "visual-stall",
-        LONG_WAITING_TIME: "long-waiting-time",
-        MULTI_WAITING_IN_ROW: "multi-waiting-in-row",
+        LONG_JOIN_TIME: 'long-join-time',
+        VISUAL_STALL: 'visual-stall',
+        LONG_WAITING_TIME: 'long-waiting-time',
+        MULTI_WAITING_IN_ROW: 'multi-waiting-in-row',
     };
 
     _logLevel = 1;
@@ -61,7 +61,6 @@ class Vidmon extends EventEmitter {
         waitingTSDiffThershold: 60 * 1000, // default 30sec
     };
 
-    
     /**
      * Create Vidmon instance
      * @param {HTMLVideoElement} videoElement video element to monitor
@@ -82,7 +81,7 @@ class Vidmon extends EventEmitter {
     set logLevel(level) {
         if (level < 0 || level > 5) {
             throw new ValidationException(
-                "Log level should be one of " +
+                'Log level should be one of ' +
                     JSON.stringify(Vidmon.LOG_LEVELS)
             );
         }
@@ -98,13 +97,13 @@ class Vidmon extends EventEmitter {
      */
     start = () => {
         if (!this._vidEl) {
-            throw new ValidationException("Video elements is not set yet");
+            throw new ValidationException('Video elements is not set yet');
         }
-        this._log(Vidmon.LOG_LEVELS.INFO, "Started");
+        this._log(Vidmon.LOG_LEVELS.INFO, 'Started');
         this._startTime = Date.now();
         this._eventsLogs.push({
             event: {
-                type: "vidmon_start",
+                type: 'vidmon_start',
             },
             ts: this._startTime,
         });
@@ -115,7 +114,7 @@ class Vidmon extends EventEmitter {
      * stop monitor
      */
     stop = () => {
-        this._log(Vidmon.LOG_LEVELS.INFO, "Stopped");
+        this._log(Vidmon.LOG_LEVELS.INFO, 'Stopped');
         this._removeListeners();
         this._watchers.forEach((watcher) => {
             clearTimeout(watcher);
@@ -139,7 +138,7 @@ class Vidmon extends EventEmitter {
         vidEvents.forEach((eventName) => {
             this._log(
                 Vidmon.LOG_LEVELS.VERBOSE,
-                "Adding Event Listener",
+                'Adding Event Listener',
                 eventName
             );
             this._vidEl.addEventListener(eventName, this._handleEvents);
@@ -150,7 +149,7 @@ class Vidmon extends EventEmitter {
         vidEvents.forEach((eventName) => {
             this._log(
                 Vidmon.LOG_LEVELS.VERBOSE,
-                "Removing Event Listener",
+                'Removing Event Listener',
                 eventName
             );
             this._vidEl.removeEventListener(eventName, this._handleEvents);
@@ -158,7 +157,7 @@ class Vidmon extends EventEmitter {
     };
 
     _startWatcher = (type, timeout, callback, overwritePrev = false) => {
-        this._log(Vidmon.LOG_LEVELS.VERBOSE, "Adding watcher for ", type);
+        this._log(Vidmon.LOG_LEVELS.VERBOSE, 'Adding watcher for ', type);
 
         if (!overwritePrev && this._watchers[type]) {
             throw new ValidationException(
@@ -172,7 +171,7 @@ class Vidmon extends EventEmitter {
 
     _stopWatcher = (type) => {
         if (this._watchers[type]) {
-            this._log(Vidmon.LOG_LEVELS.VERBOSE, "Removing watcher for ", type);
+            this._log(Vidmon.LOG_LEVELS.VERBOSE, 'Removing watcher for ', type);
             clearTimeout(this._watchers[type]);
             delete this._watchers[type];
         }
@@ -180,7 +179,7 @@ class Vidmon extends EventEmitter {
 
     _handleWatchers = (event) => {
         switch (event.type) {
-            case "play":
+            case 'play':
                 this._startWatcher(
                     Vidmon.WATCHERS.JOIN_TIME,
                     this._options.jointimeThershold,
@@ -188,14 +187,14 @@ class Vidmon extends EventEmitter {
                         this.emit(Vidmon.EVENTS.LONG_JOIN_TIME);
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
-                            "Join time toke more than",
+                            'Join time toke more than',
                             this._options.jointimeThershold / 1000,
-                            "seconds"
+                            'seconds'
                         );
                     }
                 );
                 break;
-            case "timeupdate":
+            case 'timeupdate':
                 this._stopWatcher(Vidmon.WATCHERS.JOIN_TIME);
                 this._stopWatcher(Vidmon.WATCHERS.REAL_STALL);
                 this._stopWatcher(Vidmon.WATCHERS.PLAY_AFTER_WAITING);
@@ -206,18 +205,18 @@ class Vidmon extends EventEmitter {
                         this.emit(Vidmon.EVENTS.VISUAL_STALL);
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
-                            "The player visually stalled for more than",
+                            'The player visually stalled for more than',
                             this._options.timeupdateThreshold / 1000,
-                            "seconds"
+                            'seconds'
                         );
                     }
                 );
                 break;
-            case "pause":
+            case 'pause':
                 this._stopWatcher(Vidmon.WATCHERS.JOIN_TIME);
                 this._stopWatcher(Vidmon.WATCHERS.REAL_STALL);
                 break;
-            case "waiting":
+            case 'waiting':
                 this._stopWatcher(Vidmon.WATCHERS.MULTI_WAITING);
                 this._stopWatcher(Vidmon.WATCHERS.PLAY_AFTER_WAITING);
                 this._startWatcher(
@@ -227,9 +226,9 @@ class Vidmon extends EventEmitter {
                         this.emit(Vidmon.EVENTS.LONG_WAITING_TIME);
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
-                            "The player still waiting for more than",
+                            'The player still waiting for more than',
                             this._options.playAfterWaitingThershold / 1000,
-                            "seconds"
+                            'seconds'
                         );
                     }
                 );
@@ -244,9 +243,9 @@ class Vidmon extends EventEmitter {
                             this.emit(Vidmon.EVENTS.MULTI_WAITING_IN_ROW);
                         this._log(
                             Vidmon.LOG_LEVELS.WARNING,
-                            "The player waitted for more than 3 times in less than ",
+                            'The player waitted for more than 3 times in less than ',
                             this._options.waitingTSDiffThershold / 1000,
-                            "seconds"
+                            'seconds'
                         );
                     }
                 });
@@ -255,50 +254,48 @@ class Vidmon extends EventEmitter {
 
     _logEvent = (event) => {
         switch (event.type) {
-            case "play":
-            case "pause":
-            case "ratechange":
-            case "seeked":
-                this._log(Vidmon.LOG_LEVELS.INFO, "Got event", event.type);
+            case 'play':
+            case 'pause':
+            case 'ratechange':
+            case 'seeked':
+                this._log(Vidmon.LOG_LEVELS.INFO, 'Got event', event.type);
                 break;
-            case "error":
+            case 'error':
                 this._log(
                     Vidmon.LOG_LEVELS.ERROR,
-                    "Got Error",
+                    'Got Error',
                     this._vidEl.error
                 );
                 break;
             default:
-                this._log(Vidmon.LOG_LEVELS.VERBOSE, "Got event", event.type);
+                this._log(Vidmon.LOG_LEVELS.VERBOSE, 'Got event', event.type);
         }
     };
 
-
-     _getLogFunction = (level) => {
+    _getLogFunction = (level) => {
         switch (level) {
             case Vidmon.LOG_LEVELS.DEBUG:
-                return ["debug", "DEBUG: " ]
+                return ['debug', 'DEBUG: '];
             case Vidmon.LOG_LEVELS.ERROR:
-                return ["error", "ERROR: "]
+                return ['error', 'ERROR: '];
             case Vidmon.LOG_LEVELS.WARNING:
-                return ["warn", "WARNING: "]
+                return ['warn', 'WARNING: '];
             case Vidmon.LOG_LEVELS.INFO:
-                return ["info",  "INFO: "]
+                return ['info', 'INFO: '];
             case Vidmon.LOG_LEVELS.VERBOSE:
-                return ["info", "VERBOSE: "]
+                return ['info', 'VERBOSE: '];
         }
-
-     } 
+    };
 
     _log = (level, ...args) => {
-        const TAG = "Vidmon: ";
+        const TAG = 'Vidmon: ';
         if (level == Vidmon.LOG_LEVELS.DISABLED) return;
-        const [functionName, levelTag]  = this._getLogFunction(level)
+        const [functionName, levelTag] = this._getLogFunction(level);
         if (this._logLevel >= level) {
             console[functionName]
-            ? console[functionName](TAG, ...args)
-            : console.log(TAG, levelTag, ...args);
-        }         
+                ? console[functionName](TAG, ...args)
+                : console.log(TAG, levelTag, ...args);
+        }
     };
 }
 
