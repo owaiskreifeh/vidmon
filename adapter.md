@@ -1,25 +1,25 @@
-# Vidmon Adapters 
+# Vidmon Adapters
 
-Adapters are a way to unify event shape and it makes the integration with new player much easier
+Adapters are a way to unify event shapes and it makes integration with new players much easier.
 
-## Usage 
+## Usage
 
-```js 
-import { Vidmon, HTMLAdapter } from 'vidmon'
+```js
+import { Vidmon, HTMLAdapter } from 'vidmon';
 const vidmon = new Vidmon(new HTMLAdapter(videoElement), options);
 ```
 
 ## Adapters
 
-- [X] HTMLAdapter: HTML5 Video Player, // Web native HTML5
+- [x] HTMLAdapter: HTML5 Video Player, // Web native HTML5
 - [ ] TizenAVAdapter: Tizen AV Player, // Tizen
 - [ ] AppleAVAdapter: Apple AV Play, // iOS
 - [ ] AndroidExoAdapter: Android Exo Player, // Android
 
-## Create new adapter
+## Create a new adapter
 
-1. Extend `Adapter` class 
-    You can find it in `src/Adapters/Adapter.js`
+1. Extend `Adapter` class
+   You can find it in `src/Adapters/Adapter.js`
 2. Implement both methods in your adapter class
 
     ```js
