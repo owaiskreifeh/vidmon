@@ -3,9 +3,9 @@ import ValidationException from '../ValidationException';
 
 export default class Adapter /** Abstract class */ {
     static TYPES = {
-        AV_PLAYER: "Tizen AV Player", // Tizen
+        AV_PLAY: "Tizen AV Play", // Tizen
         HTML_PLAYER: "HTML5 Video Player", // Web native HTML5
-        AV_PLAY: "Apple AV Play", // iOS
+        AV_PLAYER: "Apple AV Player", // iOS
         EXO_PLAYER: "Android Exo Player", // Android
     };
 
@@ -61,6 +61,7 @@ export default class Adapter /** Abstract class */ {
     Abstract methods
     attachListeners = (callback) => {};
     detachListeners = () => {};
+    getError = () => {}; // Get last error
 */
 
 

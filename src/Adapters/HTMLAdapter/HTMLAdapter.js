@@ -36,6 +36,10 @@ class HTMLAdapter extends Adapter {
             this._player.removeEventListener(eventName, this._eventHandler);
         });
     };
+    
+    getError = () => {
+        return this._player.error;
+    };
 
     _eventHandler = (event) => {
         this._eventHandlerCallback(this._adaptEvent(event));
@@ -45,12 +49,11 @@ class HTMLAdapter extends Adapter {
         return {
             type: event.type,
             ts: Date.now(),
+            currentTime: this.player.currentTime,
         };
     };
 
-    _getError = () => {
-        return this._player.error;
-    };
+
 }
 
 export default HTMLAdapter;

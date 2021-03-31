@@ -249,7 +249,7 @@ class Vidmon extends EventEmitter {
                 Logger.log(
                     Logger.LOG_LEVELS.ERROR,
                     'Got Error',
-                    this._adapter.getError()
+                    event.errorMessage || this._adapter.getError()
                 );
                 break;
             default:
