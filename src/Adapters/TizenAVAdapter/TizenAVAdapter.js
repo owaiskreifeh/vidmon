@@ -1,8 +1,7 @@
 import Adapter from '../Adapter';
 import Logger from '../../Logger';
 import ValidationException from '../../ValidationException';
-import { AV_ERROR, AV_STATE } from './enums'
-
+import { AV_ERROR, AV_STATE } from './enums';
 
 class TizenAVAdapter extends Adapter {
     _lastError = null;
@@ -23,6 +22,7 @@ class TizenAVAdapter extends Adapter {
         }
         if (this._hasWebapis) {
             window.webapis.avplay.setListener(this._buildAvEventsObject());
+            this._watchAvState(); // emit PLAY | PAUSE Events
         }
     }
 
@@ -49,7 +49,7 @@ class TizenAVAdapter extends Adapter {
         return {
             ts: Date.now(),
             currentTime: this.player.getCurrentTime(),
-            ...event
+            ...event,
         };
     };
 
@@ -71,6 +71,7 @@ class TizenAVAdapter extends Adapter {
                     type: 'error',
                     errorMessage: eventType,
                 });
+                // this._handleAVError(eventType)
             },
         };
     }
@@ -82,7 +83,7 @@ class TizenAVAdapter extends Adapter {
         if (this._hasWebapis) {
             this._avStateWatcher = setInterval(() => {
                 let state = window.webapis.avplay.getState();
-                if (state != this._lastAvState){
+                if (state != this._lastAvState) {
                     switch (state) {
                         case AV_STATE.PLAYING:
                             this._eventHandler({
@@ -96,10 +97,45 @@ class TizenAVAdapter extends Adapter {
                             break;
                     }
                 }
-                
             }, this._avStateWatcherInterval);
         }
     };
+
+    _handleAVError = (errorMessage) => {
+        switch (errorMessage) {
+            case AV_ERROR.PLAYER_ERROR_CONNECTION_FAILED:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_GENEREIC:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_INVALID_OPERATION:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_INVALID_PARAMETER:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_INVALID_STATE:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_INVALID_URI:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_NONE:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_NOT_SUPPORTED_FILE:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_NO_SUCH_FILE:
+                // Do something
+                break;
+            case AV_ERROR.PLAYER_ERROR_SEEK_FAILED:
+                // Do something
+                break;
+        }
+    };
+
     // Check if we're in tizen env`
     _hasWebapis = () => {
         return window.webapis !== undefined;
